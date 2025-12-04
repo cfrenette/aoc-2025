@@ -1,3 +1,5 @@
+use std::collections::HashSet;
+
 use aoc_2025::read_input_to_string;
 
 fn main() {
@@ -12,6 +14,7 @@ fn main() {
         }
     }
     part_one(&ranges);
+    part_two(&ranges);
 }
 fn part_one(ranges: &Vec<(&str, &str)>) {
     let mut invalid_ids = Vec::new();
@@ -77,8 +80,52 @@ fn part_one(ranges: &Vec<(&str, &str)>) {
                 .expect("error parsing num");
         }
     }
-    println!(
-        "Part one: {}",
-        invalid_ids.iter().fold(0, |acc, num| acc + num)
-    );
+    println!("Part one: {}", invalid_ids.iter().sum::<usize>());
+}
+
+fn part_two(ranges: &Vec<(&str, &str)>) {
+    let mut invalid_ids = Vec::new();
+
+    for range in ranges {
+        let (start, end) = range;
+
+        invalid_ids.append(&mut generate_patterns_between(start, end));
+    }
+    println!("Part two: {}", invalid_ids.iter().sum::<usize>());
+}
+
+fn generate_patterns_between(start: &str, end: &str) -> Vec<usize> {
+    let lower_limit = start.parse::<usize>().expect("could not parse lower limit");
+    let upper_limit = end.parse::<usize>().expect("could not parse upper limit");
+    let num_chars_lower = start.len();
+    let num_chars_upper = end.len();
+
+    let mut patterns = HashSet::new();
+
+    for num_chars in num_chars_lower..=num_chars_upper {
+        // needs to repeat at least twice
+        for repeat_len in 1..=(num_chars / 2) {
+            // only generate patterns that could repeat cleanly
+            if num_chars % repeat_len == 0 {
+                let start = String::from("1") + &(String::from("0").repeat(repeat_len - 1));
+                let start: usize = start.parse().expect("invalid start generated");
+
+                let end = String::from("9") + &(String::from("9").repeat(repeat_len - 1));
+                let end = end.parse().expect("invalid end generated");
+
+                // only slightly better than brute-force, I'm tired and it's bedtime :(
+                for n in start..=end {
+                    let num = n
+                        .to_string()
+                        .repeat(num_chars / repeat_len)
+                        .parse()
+                        .expect("invalid num generated");
+                    if lower_limit <= num && num <= upper_limit {
+                        patterns.insert(num);
+                    }
+                }
+            }
+        }
+    }
+    patterns.drain().collect()
 }
