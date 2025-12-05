@@ -3,6 +3,7 @@ fn main() {
     if let Ok(lines) = read_input_by_line("input") {
         let lines = lines.map(|l| l.expect("invalid input")).collect();
         part_one(&lines);
+        part_two(&lines);
     }
 }
 fn part_one(lines: &Vec<String>) {
@@ -36,4 +37,40 @@ fn part_one(lines: &Vec<String>) {
         sum += line.get(left).unwrap() * 10 + line.get(max_pos).unwrap();
     }
     println!("Part one: {sum}");
+}
+
+fn part_two(lines: &Vec<String>) {
+    let mut sum = 0;
+    for line in lines {
+        let line = line
+            .chars()
+            .map(|c| c.to_digit(10).expect("invalid digit"))
+            .collect::<Vec<u32>>();
+
+        let mut leftmost = 0;
+        // running total of digit values
+        let mut place_value = 0;
+
+        // loop through each position starting with the rightmost
+        // and slide the window right, swapping digits right to left
+        // if a new maximum is discovered
+        for digit in (0..12).rev() {
+            let rightmost = line.len() - digit;
+            let sliding_window = &line[leftmost..rightmost];
+            let (mut max_pos, mut max_val) = (0, 0);
+
+            for (pos, &val) in sliding_window.iter().enumerate() {
+                if val > max_val {
+                    max_pos = pos;
+                    max_val = val;
+                }
+            }
+
+            // multiply prior by 10 (increase place value)
+            place_value = place_value * 10 + u64::from(max_val);
+            leftmost += max_pos + 1;
+        }
+        sum += place_value;
+    }
+    println!("Part two: {sum}");
 }
